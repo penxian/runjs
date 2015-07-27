@@ -16,5 +16,8 @@
   "dependencies": {
     "requirejs": "~2.1.19",
     "codemirror": "~5.5.0"
+  },
+  "devDependencies": {
+    "bootstrap": "~3.3.5"
   }
 }
