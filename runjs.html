@@ -300,7 +300,9 @@
 		$("#addlib").change(function(){
 			editor.setValue(insertJS(this.value));
 		})
-		
+		$.getJSON("index.php/userCtr.names",function(json){
+				console.log(json)
+		})
 
 		//更换主题
 		$("#theme").change(function(){
