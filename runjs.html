@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>RUNJS</title>
+	<link rel="stylesheet" href="bower_components/codemirror/lib/codemirror.css">
+	<script type="text/javascript" src="bower_components/requirejs/require.js"></script>
+	<style type="text/css">
+		html,body{
+			margin: 0;
+			height: 100%;
+		}
+		.library{
+			font-size: 14px;
+			position:relative;
+			padding: 0 5px;
+			font-weight: bold;
+			display: inline-block;
+		}
+		.anim-b{
+			
+		}
+		.library:hover{
+			background-color: #2B8BFD;
+			cursor: pointer;
+		}
+		#addlib{
+		    right: 0;
+		    position: absolute;
+		    top: 0px;
+		    left: 0px;
+		    opacity: 0;
+		    margin: 0;
+		    cursor: pointer;
+		    display: block;
+		    height: 38px;
+		    border: 1px solid #CCC;
+		    outline: none;
+		    width: 87px;
+		}
+		.CodeMirror {
+			width:100%;
+			height: 100%;
+		}
+		iframe{
+			border:1px solid #bababa;
+			width: 100%;
+			height: 100%;
+			margin: 0;
+		}
+		.toolsbar{
+			margin: 0 5px 5px 5px;
+			background-color: #1976D2;
+			color:#fff;
+			height: 38px;
+			line-height: 38px;
+			padding-left: 5px;
+			font-size: 12px;
+		}
+		#opennewwin{
+			vertical-align: sub;
+		}
+		.content{
+			margin: 5px 5px 0;
+			height: -moz-calc(100% - 50px);
+			height: -webkit-calc(100% - 50px);
+			height: calc(100%-50px);
+			
+		}
+		.content .left{
+			width: 50%;
+			float: left;
+			height: 100%;
+			box-sizing:border-box;
+			border: 1px solid #bababa;
+		}
+		.content .right{
+			width: 50%;
+			height: 100%;
+			float:left;
+			padding: 0 5px;
+			box-sizing:border-box;
+		}
+	</style>
+</head>
+<body>
+<div class="toolsbar">
+	<button type="button" id="button">运行</button>
+	<input id="opennewwin" type="checkbox">
+	<label for="opennewwin">弹出新窗口预览</label>
+	<!-- <button type="button" onclick="formatCode()">格式化</button> -->
+
+	<select id="theme">
+		<option value="3024-night"  >3024-night</option>
+		<option value="ambiance-mobile"  >ambiance-mobile</option>
+		<option value="ambiance"  >ambiance</option>
+		<option value="base16-dark"  >base16-dark</option>
+		<option value="blackboard"  >blackboard</option>
+		<option value="cobalt"  >cobalt</option>
+		<option value="eclipse" selected >eclipse</option>
+		<option value="erlang-dark"  >erlang-dark</option>
+		<option value="lesser-dark"  >lesser-dark</option>
+		<option value="mbo">mbo</option>
+		<option value="mdn-like"  >mdn-like</option>
+		<option value="midnight"  >midnight</option>
+		<option value="monokai"  >monokai</option>
+		<option value="neat"  >neat</option>
+		<option value="neo"  >neo</option>
+		<option value="night"  >night</option>
+		<option value="paraiso-dark"  >paraiso-dark</option>
+		<option value="pastel-on-dark"  >pastel-on-dark</option>
+		<option value="rubyblue"  >rubyblue</option>
+		<option value="solarized"  >solarized</option>
+		<option value="the-matrix"  >the-matrix</option>
+		<option value="tomorrow-night-eighties"  >tomorrow-night-eighties</option>
+		<option value="vibrant-ink"  >vibrant-ink</option>
+	</select>
+	<span class="library">
+		Add Library
+		<select id="addlib">
+			<option></option>
+			<option value="jQuery">jQuery</option>
+		</select>
+	</span>
+	
+	文档类型：
+	<select id="docType" name="docType" default="HTML5">
+		<option value="HTML5">HTML5</option>
+		<option value="HTML 4.01 Strict">HTML 4.01 Strict</option>
+		<option value="HTML 4.01 Transitional">HTML 4.01 Transitional</option>
+		<option value="HTML 4.01 Frameset">HTML 4.01 Frameset</option>
+		<option value="XHTML 1.0 Strict">XHTML 1.0 Strict</option>
+		<option value="XHTML 1.0 Transitional">XHTML 1.0 Transitional</option>
+		<option value="XHTML 1.0 Frameset">XHTML 1.0 Frameset</option>
+		<option value="无">无</option>
+	</select>
+</div>
+<div class="content">
+	<div class="left">
+		<textarea id="mytextarea"></textarea>
+	</div>
+	<div class="right">
+		<iframe id="preview" frameborder="0"></iframe>
+	</div>
+</div>
+
+
+<script type="text/javascript">
+	require.config({
+		baseUrl:'bower_components',
+		packages:[{
+			name:'codemirror',
+			location:"./codemirror",
+			main:"lib/codemirror"
+		},{
+			name:"jquery",
+			location:'./jquery',
+			main:"dist/jquery"
+		}],
+		map:{
+			"*":{
+				'css':"./require-css/css",
+				'text':"./text/text"
+			}
+		}
+	})
+    
+    var doctypeMap = {
+		'HTML5': '<!DOCTYPE html>'
+		,'HTML 4.01 Strict': '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">'
+		,'HTML 4.01 Transitional': '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">'
+		,'HTML 4.01 Frameset': '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">'
+		,'XHTML 1.0 Strict': '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'
+		,'XHTML 1.0 Transitional': '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
+		,'XHTML 1.0 Frameset': '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">'
+		,'无': ''
+	};
+	/**
+	 * 在iframe中预览html内容
+	 * @param html html内容字符串
+	 * @param blank 是否在新窗口中打开
+	 */
+	function preview(html, blank){
+		var doc = doctypeMap[$("#docType").val()]
+		if( blank ){
+			var win = window.open("", "_blank");
+			win.opener = null;
+			win.document.write( doc+html );
+			win.document.close( );
+		}else{
+			var iframe = document.getElementById("preview");
+			if( iframe ){
+				iframe.onload = function(){
+					d = iframe.contentWindow.document;
+					d.open( );
+					d.write( doc+html );
+					d.close( );
+				}
+				iframe.contentWindow.location.reload(true);				
+			}
+		}
+	};
+
+	var keyMap = { 
+		"Alt-/": "autocomplete"
+		,"F11": function(e) {
+			e.setOption("fullScreen", !e.getOption("fullScreen"));
+		}
+		,"Esc": function(e) {
+			if ( e.getOption("fullScreen") ) e.setOption("fullScreen", false);
+		}
+	};
+	require(["jquery","codemirror",
+		"text!../code.html",
+		"codemirror/addon/edit/closetag",
+		"codemirror/addon/display/fullScreen",
+		"css!codemirror/addon/display/fullScreen",
+		"codemirror/addon/edit/closebrackets",
+		"codemirror/addon/fold/foldgutter",
+		"css!codemirror/addon/fold/foldgutter",
+		"codemirror/addon/fold/brace-fold",
+		"codemirror/mode/htmlmixed/htmlmixed",
+		"css!codemirror/theme/eclipse"],function($,CodeMirror,html){
+			CodeMirror.prototype.getSelectedRange = function( ) {
+				return { from: this.getCursor(true), to: this.getCursor(false) };
+			};
+			CodeMirror.prototype.selectAll = function( ) {
+				CodeMirror.commands.selectAll( this );
+			}
+			CodeMirror.prototype.formatCode = function() {
+			    var range = this.getSelectedRange();
+			    if(range.from.ch ==  range.to.ch && range.from.line == range.to.line){
+			    	this.selectAll();
+			    	range = this.getSelectedRange();    	
+			    }
+			    this.autoFormatRange(range.from, range.to);
+			};
+		var editor = CodeMirror.fromTextArea(document.getElementById('mytextarea'),{
+			lineNumbers:true,// 显示行号
+			theme: "eclipse",
+			mode:'htmlmixed',
+			extraKeys:keyMap,
+			lineWrapping:true,// 自动换行
+			autoCloseBrackets: true, // 自动关闭括号
+			autoCloseTags:true //自动关闭标签
+			,indentUnit: 4 // 缩进
+			,smartIndent: true // 智能缩进
+			,tabSize: 4 // Tab键
+			,indentWithTabs: true // 将对应空格数替换为Tab缩进
+			,electricChars: true // 将对应空格数替换为Tab缩进
+			,matchBrackets: true
+			,foldGutter: true
+			,gutters: ["CodeMirror-lint-markers", "CodeMirror-linenumbers", "CodeMirror-foldgutter"]
+		});
+		editor.setValue(html);
+
+		$("#button").click(function(){
+			preview(editor.getValue(),$("#opennewwin").is(":checked"))
+		})
+		this.formatCode = function(){
+			editor.formatCode();
+		}
+		
+		function isCssFile(a) {
+        	return a.length - (a.lastIndexOf(".css") + 4) === 0
+    	}
+
+		var libs = {
+			"jQuery":["http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.js"]
+		}
+
+		function insertJS(lib){
+			var j = libs[lib];
+			var html = editor.getValue();
+			var b=[];
+			$.each(j,function(i,url){
+				var k = url.split("/").pop();
+				if(html.indexOf(k+'"')){
+					if(isCssFile(k)){
+						html = html.replace(new RegExp('<link.*href=".*?/' + k + '".*?/>\n?'), "");
+					}else{
+						html = html.replace(new RegExp('<script.*src=".*?/' + k + '".*?><\/script>\n?'), "")
+					}
+				}
+				if(isCssFile(k)){
+					b.push('\t<link href="' + url + '" rel="stylesheet" type="text/css" />')
+				}else{
+					b.push('\t<script src="' + url + '" type="text/javascript"><\/script>')
+				}
+			})
+			if(html.indexOf("<head")!==-1){
+				html = html.replace(/<head>/i,"<head>\n"+b.join("\n"));
+			}else{
+				html = b.join("\n")+html;
+			}
+			return html;
+		}
+
+		//添加库
+		$("#addlib").change(function(){
+			editor.setValue(insertJS(this.value));
+		})
+		
+
+		//更换主题
+		$("#theme").change(function(){
+			var theme = $(this).val();
+			//cache("theme", theme);
+			require(["css!codemirror/theme/"+theme],function(){
+				editor.setOption("theme", theme);
+			});
+			
+		});
+		
+	})
+
+</script>
+</body>
+</html>
